@@ -1,2 +1,2 @@
 # TeslaPatternDiscovery
-Tesla Pattern Discovery using Machine Learning
+Tesla Pattern Discovery using Reinforcement Learning
