@@ -1,0 +1,20 @@
+{
+  "original": "100*100=10000",
+  "Path1": [
+    "BEGIN",
+    "Operation 1",
+    "Operation 1",
+    "Operation 2",
+    "Operation 1",
+    "Operation 3",
+    "END"
+  ],
+  "Path2": [
+    "BEGIN",
+    "Operation 1",
+    "Operation 2",
+    "Operation 2",
+    "Operation 1",
+    "END"
+  ]
+}
