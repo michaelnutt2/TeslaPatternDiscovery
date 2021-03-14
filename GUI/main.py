@@ -41,22 +41,39 @@ def start():
     # Creates the label above the output log "currently reading X.csv file"
     # When finishes running model will call import results function
 
+    # Last step
+    import_results()
+
 
 def import_results():
     """
     Uses CsvReader to import CSV file and then formats for viewing
     """
-    text = Text(window)
+    eqs, paths = reader.read_json()
 
-    text.place(relx=0.5, rely=0.2, relheigh=.5, relwidth=.4)
-    output_dict = reader.read_json()
+    # text.insert(END, 'Original Equation: '+eqs[i]+'\n\n')
+    # text.insert(END, 'Path:\n')
+    #
+    # for item in paths[i]:
+    #     text.insert(END, item+'\n')
 
-    text.insert(END, 'Original Equation: '+output_dict['original']+'\n\n')
-    text.insert(END, 'Path:\n')
 
-    for item in output_dict['Path1']:
-        text.insert(END, item+'\n')
+def display_results():
+    ...
 
+
+def forward():
+    ...
+
+
+def back():
+    ...
+
+
+# Text window
+text = Text(window)
+
+text.place(relx=0.5, rely=0.2, relheigh=.5, relwidth=.4)
 
 # Buttons
 import_eq = Button(text="Import Equations", command=get_eq)
@@ -67,5 +84,10 @@ run.place(relx=0.2, rely=0.9, anchor='center')
 
 import_path = Button(text="Import Results Path", command=import_results)
 import_path.place(relx=0.7, rely=0.9, anchor='center')
+
+forward_btn = Button(text="Next", command=forward)
+forward_btn.place(relx=0.75, rely=0.7)
+back_btn = Button(text="Back", command=back)
+back_btn.place(relx=0.55, rely=0.7)
 
 window.mainloop()

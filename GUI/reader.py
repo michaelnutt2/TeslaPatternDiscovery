@@ -16,13 +16,12 @@ def read_csv():
     df = pandas.read_csv(file)
     print(df)
     df_list = df.columns.to_list()
-    df_dict = {'original':df_list[0]}
+    df_dict = {'original': df_list[0]}
 
     return df_dict
 
 
-def read_json():
-    path = 'output.json'
+def read_json(path='output.json'):
     if os.path.exists(path):
         file = path
     else:
@@ -32,7 +31,10 @@ def read_json():
     with open(file) as f:
         data = json.load(f)
 
-    return data
+    eqs = data['equations']
+    paths = data['paths']
+
+    return eqs, paths
 
 
 if __name__ == '__main__':
