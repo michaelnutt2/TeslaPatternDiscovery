@@ -1,3 +1,8 @@
+"""
+Class for the GUI that also handles input generation and reading the output file to display in a text box on the gui.
+"""
+from tkinter import filedialog
+
 import reader
 from tkinter import *
 import csv
@@ -19,7 +24,7 @@ class GUI:
         self.window = Tk()
 
         self.window.minsize(800, 800)
-        self.window.title("Project 2")
+        self.window.title("Tesla Pattern Discovery")
         self.window.config(padx=20, pady=20)
 
         # Labels and Entries
@@ -38,6 +43,15 @@ class GUI:
         results_label = Label(text="Results Paths File Name", font=("Arial", 20))
         results_label.place(relx=0.2, rely=0.7, anchor='center')
 
+        display_old_path_label = Label(text="View Old Paths", font=("Arial", 20))
+        display_old_path_label.place(relx=0.7, rely=0.8, anchor='center')
+
+        self.page_label = Label(text=self.page, font=("Arial", 20))
+        self.page_label.place(relx=0.675, rely=0.7)
+
+        self.input_file_label = Label(text="", font=("Arial", 12))
+        self.input_file_label.place(relx=0.1, rely=0.55)
+
         self.csv_entry = Entry(width=25)
         self.csv_entry.place(relx=0.2, rely=0.8, anchor='center')
 
@@ -53,7 +67,7 @@ class GUI:
         run = Button(text="RUN", command=self.start)
         run.place(relx=0.2, rely=0.9, anchor='center')
 
-        import_path = Button(text="Import Results Path", command=self.import_results)
+        import_path = Button(text="Import Results Path", command=self.choose_file)
         import_path.place(relx=0.7, rely=0.9, anchor='center')
 
         forward_btn = Button(text="Next", command=self.forward)
@@ -89,11 +103,19 @@ class GUI:
         self.text.insert(END, 'Equation: '+self.eqs[self.page]+'\n\n')
         self.text.insert(END, 'Path:\n')
 
+        self.page_label.config(text=self.page+1)
+
         for item in self.paths[self.page]:
             self.text.insert(END, item+'\n')
 
     def get_eq(self):
-        ...
+        self.eq_file_path = filedialog.askopenfilename()
+        self.input_file_label.config(text="Using Input File")
+        self.eq_file_used = True
+
+    def choose_file(self):
+        self.results_path = filedialog.askopenfilename()
+        self.import_results()
 
     @staticmethod
     def gen_values(output, min_value, max_value):
@@ -155,6 +177,7 @@ class GUI:
             self.gen_values(output, int(min_value), int(max_value))
             self.write_input(output)
 
+        self.eq_file_used = False
         self.import_results()
 
     def import_results(self):
