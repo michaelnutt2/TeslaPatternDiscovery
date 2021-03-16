@@ -121,7 +121,7 @@ class GUI:
     def gen_values(output, min_value, max_value):
         """
         Runs through values from min to max to generate list of x*y*z=a values
-        these values are later exported as csv
+        these values are later exported as csv. Screens the inputs to exclude all numbers with zeros in the digits.
 
         :param output: list used to store output values
         :param min_value: minimum value to start from when generating values
@@ -134,8 +134,15 @@ class GUI:
         for i in range(a, max_value):
             for j in range(b, max_value):
                 for k in range(c, max_value):
-                    val = i * j * k
-                    output.append([val, i, j, k])
+                    if not has_zero_digit([i,j,k]):
+                        val = i * j * k
+                        output.append([val, i, j, k])
+        
+        def has_zero_digit(nums):
+            for n in nums:
+                if n % 10 == 0 or n % 100 == 0:
+                    return True
+            return False
 
     def write_input(self, output):
         """
@@ -171,6 +178,8 @@ class GUI:
 
             if min_value == "" or max_value == "":
                 return 'No value entered'
+            if min_value < "100" or max_value > "1000":
+                return 'Please enter a value with 3 digits'
 
             output = []
 
