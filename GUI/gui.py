@@ -6,6 +6,9 @@ from tkinter import filedialog
 import reader
 from tkinter import *
 import csv
+import random
+
+from TeslaPatternDiscovery.GUI.VortextMathEnv import VortexMathEnv
 
 
 class GUI:
@@ -43,8 +46,8 @@ class GUI:
         results_label = Label(text="Results Paths File Name", font=("Arial", 20))
         results_label.place(relx=0.2, rely=0.7, anchor='center')
 
-        display_old_path_label = Label(text="View Old Paths", font=("Arial", 20))
-        display_old_path_label.place(relx=0.7, rely=0.8, anchor='center')
+        # display_old_path_label = Label(text="View Old Paths", font=("Arial", 20))
+        # display_old_path_label.place(relx=0.7, rely=0.8, anchor='center')
 
         self.page_label = Label(text=self.page, font=("Arial", 20))
         self.page_label.place(relx=0.675, rely=0.7)
@@ -117,8 +120,7 @@ class GUI:
         self.results_path = filedialog.askopenfilename()
         self.import_results()
 
-    @staticmethod
-    def gen_values(output, min_value, max_value):
+    def gen_values(self, output, min_value, max_value):
         """
         Runs through values from min to max to generate list of x*y*z=a values
         these values are later exported as csv. Screens the inputs to exclude all numbers with zeros in the digits.
@@ -134,15 +136,15 @@ class GUI:
         for i in range(a, max_value):
             for j in range(b, max_value):
                 for k in range(c, max_value):
-                    if not has_zero_digit([i,j,k]):
+                    if not self.has_zero_digit([i, j, k]):
                         val = i * j * k
                         output.append([val, i, j, k])
-        
-        def has_zero_digit(nums):
-            for n in nums:
-                if n % 10 == 0 or n % 100 == 0:
-                    return True
-            return False
+
+    def has_zero_digit(self, nums):
+        for n in nums:
+            if n % 10 == 0 or n % 100 == 0:
+                return True
+        return False
 
     def write_input(self, output):
         """
@@ -167,26 +169,31 @@ class GUI:
         self.page = 0
         results_path = self.csv_entry.get()
 
+        self.input_file_label.config(text="")
+
         if results_path == "":
             results_path = "output.json"
 
         self.results_path = results_path
 
         if not self.eq_file_used:
-            min_value = self.min_entry.get()
-            max_value = self.max_entry.get()
+            min_value = int(self.min_entry.get())
+            max_value = int(self.max_entry.get())
 
             if min_value == "" or max_value == "":
+                print("No value entered")
                 return 'No value entered'
-            if min_value < "100" or max_value > "1000":
+            if min_value < 100 or max_value > 1000:
+                print("Invalid range")
                 return 'Please enter a value with 3 digits'
 
             output = []
 
-            self.gen_values(output, int(min_value), int(max_value))
+            self.gen_values(output, min_value, max_value)
             self.write_input(output)
 
         self.eq_file_used = False
+        self.model(self.eq_file_path, self.results_path)
         self.import_results()
 
     def import_results(self):
@@ -197,6 +204,35 @@ class GUI:
         self.num_paths = len(self.paths)
 
         self.display_results()
+
+    def model(self, input_file, output_file):
+        ds = reader.read_csv(input_file)
+        qtable = reader.read_csv('q_table.csv')
+        env = VortexMathEnv([ds.loc[0,1], ds.loc[0,2],ds.loc[0,3]], ds.loc[0,0], q_table=qtable)
+
+        env.action_space.sample()
+
+        episodes = 1
+        epsilon = 0.2
+
+        for episode in range(1, episodes+1):
+            state = env.reset()
+            done = False
+            score = 0
+
+            while not done:
+                if random.random() > epsilon:
+                    action = random.choice(env.q_table.iloc[0][env.possible_ops].nlargest(1, keep='all').index)
+                    n_state, reward, done, info = env.static_step(action)
+                    score += reward
+                else:
+                    action = env.possible_ops[env.action_space.sample()]
+                    n_state, reward, done, info = env.static_step(action)
+                    score += reward
+
+        print(qtable.idxmax(axis=1))
+        print(score)
+        print(env.memory)
 
 
 if __name__ == '__main__':

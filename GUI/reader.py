@@ -6,19 +6,10 @@ import os
 import pandas
 
 
-def read_csv():
-    if os.path.exists('output.csv'):
-        file = 'output.csv'
-    else:
-        print("Error: File not found")
-        return None
+def read_csv(input_file):
+    ds = pandas.read_csv(input_file, sep=',', header=None)
 
-    df = pandas.read_csv(file)
-    print(df)
-    df_list = df.columns.to_list()
-    df_dict = {'original': df_list[0]}
-
-    return df_dict
+    return ds
 
 
 def read_json(path='output.json'):
