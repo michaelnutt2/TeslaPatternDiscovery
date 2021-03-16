@@ -7,6 +7,7 @@ import reader
 from tkinter import *
 import csv
 import random
+import pandas
 
 from TeslaPatternDiscovery.GUI.VortextMathEnv import VortexMathEnv
 
@@ -23,6 +24,7 @@ class GUI:
         self.results_path = "output.json"
         self.eq_file_used = False
         self.eq_file_path = "input.csv"
+        self.num_ops = 0
 
         self.window = Tk()
 
@@ -84,7 +86,7 @@ class GUI:
         """
         Navigates forward a page in results, does nothing if max page reached
         """
-        if self.page < self.num_paths-1:
+        if self.page < self.num_paths - 1:
             self.page = self.page + 1
 
         self.display_results()
@@ -103,13 +105,14 @@ class GUI:
         Clears the text box, then fills based on what the page value is
         """
         self.text.delete(1.0, END)
-        self.text.insert(END, 'Equation: '+self.eqs[self.page]+'\n\n')
+        self.text.insert(END, 'Equation: ' + self.eqs[self.page] + '\n')
+        self.text.insert(END, 'Total Number of Operations Run: ' + str(self.num_ops) + '\n\n')
         self.text.insert(END, 'Path:\n')
 
-        self.page_label.config(text=self.page+1)
+        self.page_label.config(text=self.page + 1)
 
         for item in self.paths[self.page]:
-            self.text.insert(END, item+'\n')
+            self.text.insert(END, item + '\n')
 
     def get_eq(self):
         self.eq_file_path = filedialog.askopenfilename()
@@ -208,14 +211,14 @@ class GUI:
     def model(self, input_file, output_file):
         ds = reader.read_csv(input_file)
         qtable = reader.read_csv('q_table.csv')
-        env = VortexMathEnv([ds.loc[0,1], ds.loc[0,2],ds.loc[0,3]], ds.loc[0,0], q_table=qtable)
+        env = VortexMathEnv([ds.loc[0, 1], ds.loc[0, 2], ds.loc[0, 3]], ds.loc[0, 0], q_table=qtable)
 
         env.action_space.sample()
 
         episodes = 1
-        epsilon = 0.2
+        epsilon = 0.1
 
-        for episode in range(1, episodes+1):
+        for episode in range(1, episodes + 1):
             state = env.reset()
             done = False
             score = 0
@@ -230,9 +233,69 @@ class GUI:
                     n_state, reward, done, info = env.static_step(action)
                     score += reward
 
-        print(qtable.idxmax(axis=1))
-        print(score)
-        print(env.memory)
+        self.num_ops = len(env.memory)
+        op_list = self.compress(env.memory)
+        out_list = self.convert_to_operations(op_list)
+
+        env.memory = []
+
+        val_a = str(ds.loc[0,1])
+        val_b = str(ds.loc[0,2])
+        val_c = str(ds.loc[0,3])
+        ans = str(ds.loc[0,0])
+        eq = val_a + ' x ' + val_b + ' x ' + val_c + ' = ' + ans
+
+        out = {'equations': [eq], 'paths': [out_list]}
+        reader.write_json(out, self.results_path)
+
+    def compress(self, mem):
+        """
+        Compresses model output to combine all sequential entries into one set that
+        has how many entries for that number as the [1] value
+        :param mem: List generated from the model run of operations performed
+        :return:
+        """
+        prev = -1
+        num = 0
+        new_list = []
+        for item in mem:
+            if item == prev:
+                num += 1
+            elif prev == -1:
+                prev = item
+            else:
+                num += 1
+                new_list.append((prev, num))
+                num = 0
+                prev = item
+
+        return new_list
+
+    def convert_to_operations(self, mem):
+        """
+        Converts the operations from raw numbers to string representations of
+        the operations being run.
+        :param mem:
+        :return:
+        """
+        with open('newops.csv') as f:
+            reader = csv.reader(f)
+            operations = list(reader)
+
+        out_list = []
+
+        for item in mem:
+            op = operations[item[0]]
+            if op[2] == '0':
+                out_list.append('+' + op[1] + ' (' + str(item[1]) + ' times)')
+            elif op[2] == '1':
+                out_list.append('-' + op[1] + ' (' + str(item[1]) + ' times)')
+            elif op[2] == '2':
+                out_list.append('x' + op[1] + ' (' + str(item[1]) + ' times)')
+            elif op[2] == '3':
+                out_list.append('/' + op[1] + ' (' + str(item[1]) + ' times)')
+
+        return out_list
 
 
 if __name__ == '__main__':

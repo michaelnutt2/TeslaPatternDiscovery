@@ -28,5 +28,10 @@ def read_json(path='output.json'):
     return eqs, paths
 
 
+def write_json(output, path='output.json'):
+    with open(path, 'w') as f:
+        json.dump(output, f)
+
+
 if __name__ == '__main__':
     print(read_json())
